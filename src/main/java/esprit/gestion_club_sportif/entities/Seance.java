@@ -19,7 +19,8 @@ public class Seance {
 
     private double prix;
 
-    private String status; // Par exemple : "Disponible", "Complet", etc.
+    @Enumerated(EnumType.STRING)
+    private StatusSeance status;
 
     @ManyToOne
     @JoinColumn(name = "salle_id")
