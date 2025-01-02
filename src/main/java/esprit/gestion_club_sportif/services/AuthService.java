@@ -104,8 +104,7 @@ public class AuthService implements IAuthService {
             throw new IllegalStateException("Le compte utilisateur est déjà activé.");
         }
 
-        String newPassword = RandomStringUtils.randomAlphanumeric(10);
-        user.setPassword(passwordEncoder.encode(newPassword));
+
         user.setEnabled(true);
         userRepo.save(user);
 
@@ -159,6 +158,9 @@ public class AuthService implements IAuthService {
                             req.password()
                     )
             );
+            logger.debug("Received password length: {}", req.password().length());
+            logger.debug("Stored password hash length: {}", user.getPassword().length());
+
 
             // Generate JWT token
             var jwtToken = jwtService.generateToken(user);

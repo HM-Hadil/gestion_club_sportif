@@ -2,6 +2,6 @@ package esprit.gestion_club_sportif.entities;
 
 public enum SalleStatus {
     DISPONIBLE,
-    OCCUPEE,
+    INDISPONIBLE,
     EN_MAINTENANCE
 }

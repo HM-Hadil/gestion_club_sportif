@@ -4,12 +4,16 @@ package esprit.gestion_club_sportif.controllers;
 import esprit.gestion_club_sportif.entities.Salle;
 import esprit.gestion_club_sportif.entities.SalleStatus;
 import esprit.gestion_club_sportif.services.SalleService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
-@RequestMapping("/salles")
+@RequestMapping("salles")
+//@PreAuthorize("hasAnyRole('ADMIN', 'ENTRENEUR')")  // Ajouter cette ligne
+
 public class SalleController {
     private final SalleService salleService;
 
@@ -22,9 +26,13 @@ public class SalleController {
         return salleService.getAvailableSalles();
     }
 
-    @PutMapping("/{id}/status")
-    public Salle updateSalleStatus(@PathVariable Long id, @RequestParam SalleStatus status) {
-        return salleService.updateSalleStatus(id, status);
+
+    @GetMapping("/check-availability/{salleId}")
+    public ResponseEntity<Boolean> checkSalleAvailability(
+            @PathVariable Long salleId,
+            @RequestParam LocalDateTime dateDebut,
+            @RequestParam LocalDateTime dateFin) {
+        return ResponseEntity.ok(salleService.isSalleAvailable(salleId, dateDebut, dateFin));
     }
 
     // Récupérer toutes les salles
@@ -41,8 +49,17 @@ public class SalleController {
 
     // Mettre à jour une salle
     @PutMapping("/{id}")
-    public Salle updateSalle(@PathVariable Long id, @RequestBody Salle salle) {
-        return salleService.updateSalle(id, salle);
+    public ResponseEntity<Salle> updateSalle(
+            @PathVariable Long id,
+            @RequestBody Salle salle) {
+        return ResponseEntity.ok(salleService.updateSalle(id, salle));
+    }
+
+    @PutMapping("/{id}/status")
+    public ResponseEntity<Salle> updateSalleStatus(
+            @PathVariable Long id,
+            @RequestParam SalleStatus status) {
+        return ResponseEntity.ok(salleService.updateSalleStatus(id, status));
     }
 
     // Supprimer une salle

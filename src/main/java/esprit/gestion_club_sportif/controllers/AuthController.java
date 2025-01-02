@@ -7,7 +7,9 @@ import esprit.gestion_club_sportif.request.UserRequest;
 import esprit.gestion_club_sportif.response.AuthenticationResponse;
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -32,9 +34,13 @@ public class AuthController {
     }
 
     @PostMapping("/authenticate")
-    public ResponseEntity<AuthenticationResponse> authenticate(@RequestBody AuthenticationRequest req) {
-        return ResponseEntity.ok(iAuthService.authenticate(req));
-
+    public ResponseEntity<?> authenticate(@RequestBody AuthenticationRequest req) {
+        try {
+            return ResponseEntity.ok(iAuthService.authenticate(req));
+        } catch (BadCredentialsException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Invalid email or password.");
+        }
     }
 
 

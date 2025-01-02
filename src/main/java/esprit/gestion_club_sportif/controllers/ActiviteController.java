@@ -3,13 +3,19 @@ package esprit.gestion_club_sportif.controllers;
 
 import esprit.gestion_club_sportif.entities.Activite;
 import esprit.gestion_club_sportif.entities.Seance;
+import esprit.gestion_club_sportif.request.ActiviteRequest;
 import esprit.gestion_club_sportif.services.ActiviteService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
-@RequestMapping("/activites")
+@RequestMapping("activites")
 public class ActiviteController {
     private final ActiviteService activiteService;
 
@@ -17,11 +23,54 @@ public class ActiviteController {
         this.activiteService = activiteService;
     }
 
-    @PostMapping("/create")
-    public Activite createActiviteWithSeances(
-            @RequestParam String nomActivite,
-            @RequestBody List<Seance> seancesData,
-            @RequestParam Long salleId) {
 
-        return activiteService.createActiviteWithSeances(nomActivite, seancesData, salleId);
+    @GetMapping
+    public ResponseEntity<List<Activite>> getAllActivities() {
+        return ResponseEntity.ok(activiteService.getAllActivities());
+    }
+
+    @GetMapping("/entraineur/{entraineurId}")
+    public ResponseEntity<List<Activite>> getActivitiesByEntraineur(@PathVariable UUID entraineurId) {
+        return ResponseEntity.ok(activiteService.getActivitiesByEntraineur(entraineurId));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Activite> getActiviteById(@PathVariable Long id) {
+        return ResponseEntity.ok(activiteService.getActiviteById(id));
+    }
+
+    @PostMapping("/activites")
+    public ResponseEntity<Activite> createActivite(@RequestBody ActiviteRequest activiteRequest) {
+        Activite createdActivite = activiteService.createActivite(activiteRequest);
+        return ResponseEntity.ok(createdActivite);
+    }
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('Entreneur')")
+    public ResponseEntity<Activite> updateActivite(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestBody Activite activite) {
+        UUID entraineurId = UUID.fromString(userDetails.getUsername());
+        return ResponseEntity.ok(activiteService.updateActivite(id, entraineurId, activite));
+    }
+
+    @PutMapping("/{id}/seances")
+    @PreAuthorize("hasRole('Entreneur')")
+    public ResponseEntity<Activite> updateActiviteSeances(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestBody List<Seance> seances,
+            @RequestParam Long salleId) {
+        UUID entraineurId = UUID.fromString(userDetails.getUsername());
+        return ResponseEntity.ok(activiteService.updateActiviteSeances(id, entraineurId, seances, salleId));
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('Entreneur')")
+    public ResponseEntity<Void> deleteActivite(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        UUID entraineurId = UUID.fromString(userDetails.getUsername());
+        activiteService.deleteActivite(id, entraineurId);
+        return ResponseEntity.ok().build();
     }}
