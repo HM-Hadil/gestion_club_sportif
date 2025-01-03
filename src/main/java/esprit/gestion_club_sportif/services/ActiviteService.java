@@ -54,6 +54,21 @@ public class ActiviteService {
             Salle salle = salleRepository.findById(seanceRequest.getSalleId())
                     .orElseThrow(() -> new ResourceNotFoundException("Salle non trouvée"));
 
+            // Vérification des conflits de dates pour la salle
+            List<Seance> seancesExistantes = seanceRepository.findBySalle(salle);
+
+            boolean conflit = seancesExistantes.stream().anyMatch(seanceExistante ->
+                    seanceRequest.getDateDebut().isBefore(seanceExistante.getDateFin()) &&
+                            seanceRequest.getDateFin().isAfter(seanceExistante.getDateDebut())
+            );
+
+            if (conflit) {
+                throw new IllegalArgumentException("La salle " + salle.getNom() +
+                        " est déjà réservée entre " +
+                        seanceRequest.getDateDebut() + " et " + seanceRequest.getDateFin());
+            }
+
+            // Création de la séance si la salle est disponible
             Seance seance = new Seance();
             seance.setDateDebut(seanceRequest.getDateDebut());
             seance.setDateFin(seanceRequest.getDateFin());

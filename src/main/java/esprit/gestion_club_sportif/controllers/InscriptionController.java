@@ -1,6 +1,7 @@
 package esprit.gestion_club_sportif.controllers;
 
 import esprit.gestion_club_sportif.entities.Inscription;
+import esprit.gestion_club_sportif.exceptions.UnauthorizedException;
 import esprit.gestion_club_sportif.services.InscriptionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -19,14 +20,17 @@ import java.util.UUID;
 public class InscriptionController {
     private final InscriptionService inscriptionService;
 
-    @PostMapping("/seances/{seanceId}")
-    @PreAuthorize("hasRole('Joueur')")
+    @PostMapping("/seances/{seanceId}/{joueurId}")
     public ResponseEntity<Inscription> inscrireASeance(
             @PathVariable Long seanceId,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        UUID joueurId = UUID.fromString(userDetails.getUsername());
+            @PathVariable UUID joueurId
+        ) {
+
+
+
         return ResponseEntity.ok(inscriptionService.inscrireJoueurASeance(seanceId, joueurId));
     }
+
 
     @DeleteMapping("/{inscriptionId}")
     @PreAuthorize("hasRole('Joueur')")

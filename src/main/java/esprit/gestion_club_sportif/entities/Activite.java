@@ -1,5 +1,6 @@
 package esprit.gestion_club_sportif.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import esprit.gestion_club_sportif.entities.Seance;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -17,6 +18,8 @@ public class Activite {
     private String nom;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "entraineur_id")
+    @JsonIgnore
+
     private User entraineur;
     @OneToMany(mappedBy = "activite", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Seance> seances = new ArrayList<>();
