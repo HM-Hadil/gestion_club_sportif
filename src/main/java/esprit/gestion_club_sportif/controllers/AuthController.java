@@ -24,14 +24,10 @@ public class AuthController {
     private final IAuthService iAuthService;
     @PostMapping("/register")
     public ResponseEntity<AuthenticationResponse> registerJoueur(@RequestBody UserRequest req) throws MalformedURLException, MessagingException {
-        return ResponseEntity.ok(iAuthService.registerJoueur(req));
+        return ResponseEntity.ok(iAuthService.register(req));
 
     }
-    @PostMapping("/register/Entreneur")
-    public ResponseEntity<AuthenticationResponse> registerEntreneur(@RequestBody UserRequest req) throws MalformedURLException {
-        return ResponseEntity.ok(iAuthService.registerEntreneur(req));
 
-    }
 
     @PostMapping("/authenticate")
     public ResponseEntity<?> authenticate(@RequestBody AuthenticationRequest req) {
@@ -44,6 +40,14 @@ public class AuthController {
     }
 
 
+
+    @PostMapping("/activateEntreneur")
+    public ResponseEntity<String> activateEntreneur(@RequestParam UUID id) throws MessagingException {
+        iAuthService.activateEntreneurAccount(id);
+        return ResponseEntity.ok("Partner account activated successfully.");
+    }
+
+
     @GetMapping("/confirm-account")
     public ResponseEntity<String> confirmUserAccount(@RequestParam String token) {
         String result = iAuthService.confirmUserAccount(token);
@@ -52,14 +56,6 @@ public class AuthController {
         }
         return ResponseEntity.ok("<html><body><b>" + result + "</b></body></html>");
     }
-
-
-    @PostMapping("/activateEntreneur")
-    public ResponseEntity<String> activateEntreneur(@RequestParam UUID id) throws MessagingException {
-        iAuthService.activateEntreneurAccount(id);
-        return ResponseEntity.ok("Partner account activated successfully.");
-    }
-
 
 
 }

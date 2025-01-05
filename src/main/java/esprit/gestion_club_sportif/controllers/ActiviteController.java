@@ -4,6 +4,7 @@ package esprit.gestion_club_sportif.controllers;
 import esprit.gestion_club_sportif.entities.Activite;
 import esprit.gestion_club_sportif.entities.Seance;
 import esprit.gestion_club_sportif.request.ActiviteRequest;
+import esprit.gestion_club_sportif.request.ActiviteResult;
 import esprit.gestion_club_sportif.services.ActiviteService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -16,6 +17,8 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("activites")
+@CrossOrigin(origins = "http://localhost:4200")
+
 public class ActiviteController {
     private final ActiviteService activiteService;
 
@@ -24,8 +27,9 @@ public class ActiviteController {
     }
 
 
+
     @GetMapping
-    public ResponseEntity<List<Activite>> getAllActivities() {
+    public ResponseEntity<List<ActiviteResult>> getAllActivities() {
         return ResponseEntity.ok(activiteService.getAllActivities());
     }
 

@@ -2,6 +2,7 @@ package esprit.gestion_club_sportif.controllers;
 
 import esprit.gestion_club_sportif.entities.Inscription;
 import esprit.gestion_club_sportif.exceptions.UnauthorizedException;
+import esprit.gestion_club_sportif.response.InscriptionResult;
 import esprit.gestion_club_sportif.services.InscriptionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -32,24 +33,22 @@ public class InscriptionController {
     }
 
 
-    @DeleteMapping("/{inscriptionId}")
-    @PreAuthorize("hasRole('Joueur')")
-    public ResponseEntity<Void> annulerInscription(
-            @PathVariable Long inscriptionId,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        UUID joueurId = UUID.fromString(userDetails.getUsername());
-        inscriptionService.annulerInscription(inscriptionId, joueurId);
-        return ResponseEntity.ok().build();
+    @PutMapping("/{inscriptionId}/annuler")
+    public ResponseEntity<Void> annulerInscription(@PathVariable Long inscriptionId) {
+        inscriptionService.annulerInscription(inscriptionId);
+        return ResponseEntity.noContent().build();
     }
+    @GetMapping("/mes-inscriptions/{joueurId}")
+    public ResponseEntity<List<InscriptionResult>> getMesInscriptions(
+            @PathVariable UUID joueurId) {
 
-    @GetMapping("/mes-inscriptions")
-    @PreAuthorize("hasRole('Joueur')")
-    public ResponseEntity<List<Inscription>> getMesInscriptions(
-            @AuthenticationPrincipal UserDetails userDetails) {
-        UUID joueurId = UUID.fromString(userDetails.getUsername());
         return ResponseEntity.ok(inscriptionService.getInscriptionsJoueur(joueurId));
     }
-
+    @PutMapping("/{inscriptionId}/confirmerPresence")
+    public ResponseEntity<Void> confirmerPresence(@PathVariable Long inscriptionId) {
+        inscriptionService.confirmerPresence(inscriptionId);
+        return ResponseEntity.noContent().build();
+    }
     @GetMapping("/seances/{seanceId}")
     @PreAuthorize("hasAnyRole('Entreneur', 'ADMIN')")
     public ResponseEntity<List<Inscription>> getInscriptionsSeance(@PathVariable Long seanceId) {

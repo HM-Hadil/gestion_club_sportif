@@ -11,10 +11,9 @@ import java.net.MalformedURLException;
 import java.util.UUID;
 
 public interface IAuthService {
-    AuthenticationResponse registerJoueur(UserRequest req) throws MalformedURLException, MessagingException;
+    AuthenticationResponse register(UserRequest req) throws MalformedURLException, MessagingException;
     AuthenticationResponse authenticate(AuthenticationRequest req);
 
-    AuthenticationResponse registerEntreneur(UserRequest req) throws MalformedURLException;
 
 
 

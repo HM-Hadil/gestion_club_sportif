@@ -27,4 +27,13 @@ public enum Role {
         }
         throw new IllegalArgumentException("Invalid dbCode '" + dbCode + "' for Role");
     }
+    public static Role fromString(String role) {
+        for (Role r : Role.values()) {
+            if (r.name().equalsIgnoreCase(role)) { // Comparaison insensible à la casse
+                return r;
+            }
+        }
+        throw new IllegalArgumentException("Unknown role: " + role);
+    }
+
 }

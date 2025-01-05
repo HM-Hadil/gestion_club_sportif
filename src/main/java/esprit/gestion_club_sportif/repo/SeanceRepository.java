@@ -11,7 +11,7 @@ import java.util.List;
 public interface SeanceRepository extends JpaRepository<Seance,Long> {
     public List<Seance> findBySalleId(Long salleId) ;
     List<Seance> findByStatus(StatusSeance status);
-    List<Seance> findBySalleAndDateFinAfterAndDateDebutBefore(Salle salle, LocalDateTime dateDebut, LocalDateTime dateFin);
+    List<Seance> findBySalleAndDateDebutBetween(Salle salle, LocalDateTime debut, LocalDateTime fin);
     List<Seance> findBySalle(Salle salle);
 
 

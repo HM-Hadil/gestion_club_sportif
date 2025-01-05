@@ -9,6 +9,6 @@ public record UserRequest(
         String email,
         String password,
         String phone,
-        Role role
+        String role
 ) {
 }

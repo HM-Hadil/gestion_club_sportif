@@ -136,6 +136,7 @@ public class SalleService {
             throw new RuntimeException("Impossible de supprimer la salle car elle a des séances programmées");
         }
 
+        // Si la salle n'a pas de séances programmées, supprimer la salle
         salleRepository.delete(salle);
     }
 }

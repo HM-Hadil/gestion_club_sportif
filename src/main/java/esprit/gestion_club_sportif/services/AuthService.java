@@ -47,53 +47,33 @@ public class AuthService implements IAuthService {
     private final ConfirmationTokenRepository confirmationTokenRepository;
 
     private static final Logger logger = LoggerFactory.getLogger(AuthService.class);
-
     @Override
-    public AuthenticationResponse registerJoueur(UserRequest req) throws MalformedURLException {
+    public AuthenticationResponse register(UserRequest req) throws MalformedURLException {
         if (userRepo.existsByEmail(req.email())) {
             logger.warn("Attempt to register with existing email: {}", req.email());
             throw new EmailAlreadyExistsException("Email already exists!");
         }
-        var user = esprit.gestion_club_sportif.entities.User.builder()
-                .firstname(req.firstname())
-                .lastname(req.lastname())
-                .email(req.email())
-                .password(passwordEncoder.encode(req.password()))
-                .phone(req.phone())
-                .role(Role.Joueur) // Assign an appropriate role
-                .isEnabled(true)
-                .build();
-        userRepo.save(user);
 
-        var jwtToken = jwtService.generateToken(user);
+        // Convertir le String en Role
+        Role role = Role.fromString(req.role());  // Maintenant c'est correct car req.role() retourne un String
 
-        logger.info("Partner registered successfully: {}", req.email());
-        return new AuthenticationResponse(jwtToken);
-    }
+        boolean isEnabled = role == Role.Joueur;
 
-    @Override
-    public AuthenticationResponse registerEntreneur(UserRequest req) throws MalformedURLException {
-        if (userRepo.existsByEmail(req.email())) {
-            logger.warn("Attempt to register with existing email: {}", req.email());
-            throw new EmailAlreadyExistsException("Email already exists!");
-        }
         var user = User.builder()
                 .firstname(req.firstname())
                 .lastname(req.lastname())
                 .email(req.email())
                 .password(passwordEncoder.encode(req.password()))
                 .phone(req.phone())
-                .role(Role.Entreneur)
-                .isEnabled(false)
+                .role(role)
+                .isEnabled(isEnabled)
                 .build();
+
         userRepo.save(user);
-
         var jwtToken = jwtService.generateToken(user);
-
         logger.info("User registered successfully: {}", req.email());
         return new AuthenticationResponse(jwtToken);
     }
-
 
     @Override
     public void activateEntreneurAccount(UUID id) throws jakarta.mail.MessagingException {

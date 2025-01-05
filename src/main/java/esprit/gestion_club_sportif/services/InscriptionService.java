@@ -4,6 +4,7 @@ package esprit.gestion_club_sportif.services;
 import esprit.gestion_club_sportif.entities.*;
 import esprit.gestion_club_sportif.exceptions.*;
 import esprit.gestion_club_sportif.repo.*;
+import esprit.gestion_club_sportif.response.InscriptionResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -11,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -58,28 +60,58 @@ public class InscriptionService {
         return inscriptionRepository.save(inscription);
     }
 
-    @Transactional
-    public void annulerInscription(Long inscriptionId, UUID joueurId) {
+    public void confirmerPresence(Long inscriptionId) {
         Inscription inscription = inscriptionRepository.findById(inscriptionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Inscription non trouvée"));
 
-        if (!inscription.getJoueur().getId().equals(joueurId)) {
-            throw new UnauthorizedException("Vous n'êtes pas autorisé à annuler cette inscription");
-        }
+        // Mettre à jour le statut de présence
+        inscription.setPresenceConfirmee(true);
+        inscriptionRepository.save(inscription);
+    }
+    @Transactional
+    public void annulerInscription(Long inscriptionId) {
+        Inscription inscription = inscriptionRepository.findById(inscriptionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Inscription non trouvée"));
 
+        // Vérifier si l'inscription peut être annulée (par exemple, si la séance commence dans moins de 24 heures)
         if (inscription.getSeance().getDateDebut().minusHours(24).isBefore(LocalDateTime.now())) {
             throw new IllegalStateException("Impossible d'annuler moins de 24h avant la séance");
         }
 
+        // Annuler l'inscription
         inscription.setStatut(StatutInscription.ANNULEE);
         inscriptionRepository.save(inscription);
     }
 
     @Transactional(readOnly = true)
-    public List<Inscription> getInscriptionsJoueur(UUID joueurId) {
-        return inscriptionRepository.findByJoueurIdOrderByDateInscriptionDesc(joueurId);
+    public List<InscriptionResult> getInscriptionsJoueur(UUID joueurId) {
+        List<Inscription> inscriptions = inscriptionRepository.findByJoueurIdOrderByDateInscriptionDesc(joueurId);
+        return inscriptions.stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
     }
 
+    private InscriptionResult convertToDto(Inscription inscription) {
+        InscriptionResult dto = new InscriptionResult();
+        dto.setId(inscription.getId());
+
+        // Récupérer la séance
+        Seance seance = inscription.getSeance();
+        if (seance != null) {
+            // Récupérer l'activité liée à la séance et son nom
+            Activite activite = seance.getActivite();
+            if (activite != null) {
+                dto.setSeanceName(activite.getNom()); // Assurez-vous que 'getNom()' existe dans Activite
+            }
+
+            dto.setDateInscription(inscription.getDateInscription());
+            dto.setStatut(inscription.getStatut().name()); // Si vous voulez exposer le statut sous forme de string
+            dto.setPresenceConfirmee(inscription.getPresenceConfirmee());
+            dto.setCommentaire(inscription.getCommentaire());
+            return dto;
+        }
+        return dto;
+    }
     @Transactional(readOnly = true)
     public List<Inscription> getInscriptionsSeance(Long seanceId) {
         return inscriptionRepository.findBySeanceIdOrderByDateInscription(seanceId);

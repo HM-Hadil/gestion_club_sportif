@@ -13,13 +13,18 @@ import esprit.gestion_club_sportif.repo.SeanceRepository;
 
 import esprit.gestion_club_sportif.repo.UserRepo;
 import esprit.gestion_club_sportif.request.ActiviteRequest;
+import esprit.gestion_club_sportif.request.ActiviteResult;
 import esprit.gestion_club_sportif.request.SeanceRequest;
+import esprit.gestion_club_sportif.response.UserResult;
+import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class ActiviteService {
@@ -28,14 +33,24 @@ public class ActiviteService {
     private final SalleRepository salleRepository;
     private final UserRepo userRepository;
 
+    private final ModelMapper modelMapper;
+    @Autowired
+    private final UserService userService;
 
-    public ActiviteService(ActiviteRepository activiteRepository, SeanceRepository seanceRepository, SalleRepository salleRepository
-    ,UserRepo userRepository) {
+    public ActiviteService(ActiviteRepository activiteRepository, ModelMapper modelMapper, SeanceRepository seanceRepository, SalleRepository salleRepository
+    , UserRepo userRepository, UserService userService) {
         this.activiteRepository = activiteRepository;
         this.seanceRepository = seanceRepository;
         this.salleRepository = salleRepository;
         this.userRepository=userRepository;
+        this.modelMapper=modelMapper;
+        this.userService = userService;
     }
+    /**
+    private boolean isSeanceOverlapping(LocalDateTime startDate1, LocalDateTime endDate1,
+                                        LocalDateTime startDate2, LocalDateTime endDate2) {
+        return !startDate1.isAfter(endDate2) && !endDate1.isBefore(startDate2);
+    }**/
     @Transactional
     public Activite createActivite(ActiviteRequest activiteRequest) {
         UUID entraineurId = activiteRequest.getEntraineurId();
@@ -54,21 +69,31 @@ public class ActiviteService {
             Salle salle = salleRepository.findById(seanceRequest.getSalleId())
                     .orElseThrow(() -> new ResourceNotFoundException("Salle non trouvée"));
 
-            // Vérification des conflits de dates pour la salle
-            List<Seance> seancesExistantes = seanceRepository.findBySalle(salle);
+            // Vérifier toutes les séances existantes pour cette salle
+            List<Seance> seancesExistantes = seanceRepository.findAll().stream()
+                    .filter(s -> s.getSalle().getId().equals(salle.getId()))
+                    .toList();
 
-            boolean conflit = seancesExistantes.stream().anyMatch(seanceExistante ->
-                    seanceRequest.getDateDebut().isBefore(seanceExistante.getDateFin()) &&
-                            seanceRequest.getDateFin().isAfter(seanceExistante.getDateDebut())
-            );
+            for (Seance seanceExistante : seancesExistantes) {
+                if (seanceRequest.getDateDebut().equals(seanceExistante.getDateDebut()) ||
+                        seanceRequest.getDateFin().equals(seanceExistante.getDateFin()) ||
+                        (seanceRequest.getDateDebut().isAfter(seanceExistante.getDateDebut()) &&
+                                seanceRequest.getDateDebut().isBefore(seanceExistante.getDateFin())) ||
+                        (seanceRequest.getDateFin().isAfter(seanceExistante.getDateDebut()) &&
+                                seanceRequest.getDateFin().isBefore(seanceExistante.getDateFin())) ||
+                        (seanceRequest.getDateDebut().isBefore(seanceExistante.getDateDebut()) &&
+                                seanceRequest.getDateFin().isAfter(seanceExistante.getDateFin()))) {
 
-            if (conflit) {
-                throw new IllegalArgumentException("La salle " + salle.getNom() +
-                        " est déjà réservée entre " +
-                        seanceRequest.getDateDebut() + " et " + seanceRequest.getDateFin());
+                    throw new IllegalArgumentException(
+                            String.format("La salle est déjà réservée pour le créneau du %s %s au %s %s",
+                                    seanceExistante.getDateDebut().toLocalDate(),
+                                    seanceExistante.getDateDebut().toLocalTime(),
+                                    seanceExistante.getDateFin().toLocalDate(),
+                                    seanceExistante.getDateFin().toLocalTime())
+                    );
+                }
             }
 
-            // Création de la séance si la salle est disponible
             Seance seance = new Seance();
             seance.setDateDebut(seanceRequest.getDateDebut());
             seance.setDateFin(seanceRequest.getDateFin());
@@ -84,9 +109,32 @@ public class ActiviteService {
     }
 
     @Transactional(readOnly = true)
-    public List<Activite> getAllActivities() {
-        return activiteRepository.findAll();
+    public List<ActiviteResult> getAllActivities() {
+        List<Activite> activites = activiteRepository.findAll();
+        return activites.stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
     }
+    private ActiviteResult convertToDto(Activite activite) {
+        // Utilisation de modelMapper pour le mapping de base
+        ActiviteResult dto = modelMapper.map(activite, ActiviteResult.class);
+
+        // Si l'ID de l'entraîneur est disponible, nous récupérons l'entraîneur avec ce service
+        if (activite.getEntraineur() != null) {
+            dto.setEntraineurId(activite.getEntraineur().getId());
+
+            // Appel au service User pour récupérer l'entraîneur complet par son ID
+            UserResult entraineur = userService.findUserById(activite.getEntraineur().getId());
+            if (entraineur != null) {
+                dto.setEntraineurFirstname(entraineur.firstname());
+                dto.setEntraineurLastname(entraineur.lastname());
+            }
+        }
+
+        return dto;
+    }
+
+
     @Transactional(readOnly = true)
     public List<Activite> getActivitiesByEntraineur(UUID entraineurId) {
         return activiteRepository.findByEntraineurId(entraineurId);
