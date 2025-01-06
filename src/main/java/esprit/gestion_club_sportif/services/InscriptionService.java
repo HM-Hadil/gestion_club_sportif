@@ -115,20 +115,9 @@ public class InscriptionService {
         return dto;
     }
     @Transactional(readOnly = true)
-    public List<Inscription> getInscriptionsSeance(Long seanceId) {
-        return inscriptionRepository.findBySeanceIdOrderByDateInscription(seanceId);
-    }
-
-    @Transactional(readOnly = true)
-    public List<InscriptionResult> getInscriptionsByEntraineur(UUID entraineurId, Long seanceId) {
-        Seance seance = seanceRepository.findById(seanceId)
-                .orElseThrow(() -> new ResourceNotFoundException("Séance non trouvée"));
-
-        if (!seance.getActivite().getEntraineur().getId().equals(entraineurId)) {
-            throw new UnauthorizedException("Vous n'êtes pas autorisé à voir ces inscriptions");
-        }
-
-        List<Inscription> inscriptions = inscriptionRepository.findBySeanceIdOrderByDateInscription(seanceId);
+    public List<InscriptionResult> getInscriptionsSeance(Long seanceId) {
+        // Changed to use the entity and convert it manually instead of relying on direct DTO projection
+        List<Inscription> inscriptions = inscriptionRepository.findBySeanceIdOrderByDateInscriptionDesc(seanceId);
         return inscriptions.stream()
                 .map(this::convertToInscriptionResult)
                 .collect(Collectors.toList());
@@ -137,21 +126,54 @@ public class InscriptionService {
     private InscriptionResult convertToInscriptionResult(Inscription inscription) {
         InscriptionResult result = new InscriptionResult();
         result.setId(inscription.getId());
-        result.setSeanceName(inscription.getSeance().getActivite().getNom());
+
+        // Safely get the seance and its details
+        Seance seance = inscription.getSeance();
+        if (seance != null) {
+            // Create a clean copy of the seance to avoid circular references
+            Seance cleanSeance = new Seance();
+            cleanSeance.setId(seance.getId());
+            cleanSeance.setDateDebut(seance.getDateDebut());
+            cleanSeance.setDateFin(seance.getDateFin());
+            cleanSeance.setNombreLimite(seance.getNombreLimite());
+            cleanSeance.setPrix(seance.getPrix());
+            cleanSeance.setStatus(seance.getStatus());
+
+            // Set salle if exists
+            if (seance.getSalle() != null) {
+                Salle salle = new Salle();
+                salle.setId(seance.getSalle().getId());
+                salle.setNom(seance.getSalle().getNom());
+                salle.setStatus(seance.getSalle().getStatus());
+                cleanSeance.setSalle(salle);
+            }
+
+            // Set activite if exists
+            if (seance.getActivite() != null) {
+                Activite activite = new Activite();
+                activite.setId(seance.getActivite().getId());
+                activite.setNom(seance.getActivite().getNom());
+                // Don't set seances to avoid circular reference
+                cleanSeance.setActivite(activite);
+            }
+
+            result.setSeance(cleanSeance);
+            result.setSeanceName(seance.getActivite() != null ? seance.getActivite().getNom() : null);
+        }
+
         result.setDateInscription(inscription.getDateInscription());
         result.setStatut(inscription.getStatut().name());
         result.setPresenceConfirmee(inscription.getPresenceConfirmee());
         result.setCommentaire(inscription.getCommentaire());
-        result.setJoueurId(inscription.getJoueur().getId());
 
-        // Configurer la séance tout en évitant les références circulaires
-        Seance seance = inscription.getSeance();
-        // Détacher les relations qui peuvent causer des références circulaires
-        seance.getActivite().setSeances(null);  // Éviter la liste des séances dans l'activité
-        result.setSeance(seance);
+        if (inscription.getJoueur() != null) {
+            result.setJoueurId(inscription.getJoueur().getId());
+            // Add any other player details you need
+        }
 
         return result;
     }
+
 }
 
 

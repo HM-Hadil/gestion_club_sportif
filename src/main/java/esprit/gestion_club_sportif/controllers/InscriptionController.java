@@ -49,16 +49,12 @@ public class InscriptionController {
         inscriptionService.confirmerPresence(inscriptionId);
         return ResponseEntity.noContent().build();
     }
-    @GetMapping("/seances/{seanceId}")
-    @PreAuthorize("hasAnyRole('Entreneur', 'ADMIN')")
-    public ResponseEntity<List<Inscription>> getInscriptionsSeance(@PathVariable Long seanceId) {
-        return ResponseEntity.ok(inscriptionService.getInscriptionsSeance(seanceId));
-    }
-    @GetMapping("/entraineur/{entraineurId}/seance/{seanceId}")
+
+    @GetMapping("/seance/{seanceId}")
     public ResponseEntity<List<InscriptionResult>> getInscriptionsByEntraineur(
-            @PathVariable Long seanceId,
-            @PathVariable  UUID entraineurId ){
-        return ResponseEntity.ok(inscriptionService.getInscriptionsByEntraineur(entraineurId, seanceId));
+            @PathVariable Long seanceId
+            ){
+        return ResponseEntity.ok(inscriptionService.getInscriptionsSeance( seanceId));
     }
 
 }
