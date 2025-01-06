@@ -136,8 +136,11 @@ public class ActiviteService {
 
 
     @Transactional(readOnly = true)
-    public List<Activite> getActivitiesByEntraineur(UUID entraineurId) {
-        return activiteRepository.findByEntraineurId(entraineurId);
+    public List<ActiviteResult> getActivitiesByEntraineur(UUID entraineurId) {
+        List<Activite> activites = activiteRepository.findByEntraineurId(entraineurId);
+        return activites.stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
     }
     @Transactional(readOnly = true)
     public Activite getActiviteById(Long id) {
@@ -159,12 +162,9 @@ public class ActiviteService {
     }
 
     @Transactional
-    public Activite updateActiviteSeances(Long id, UUID entraineurId, List<Seance> newSeances, Long salleId) {
+    public Activite updateActiviteSeances(Long id,  List<Seance> newSeances, Long salleId) {
         Activite activite = getActiviteById(id);
 
-        if (!activite.getEntraineur().getId().equals(entraineurId)) {
-            throw new UnauthorizedException("Vous n'êtes pas autorisé à modifier cette activité");
-        }
 
         Salle salle = salleRepository.findById(salleId)
                 .orElseThrow(() -> new ResourceNotFoundException("Salle non trouvée"));
@@ -180,18 +180,31 @@ public class ActiviteService {
     }
 
     @Transactional
-    public void deleteActivite(Long id, UUID entraineurId) {
-        Activite activite = getActiviteById(id);
+    public void deleteSeance(Long activiteId, Long seanceId) {
+        Activite activite = getActiviteById(activiteId);
 
-        if (!activite.getEntraineur().getId().equals(entraineurId)) {
-            throw new UnauthorizedException("Vous n'êtes pas autorisé à supprimer cette activité");
+
+
+        Seance seance = activite.getSeances().stream()
+                .filter(s -> s.getId().equals(seanceId))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("Séance non trouvée"));
+
+        if (!seance.getInscriptions().isEmpty()) {
+            throw new IllegalStateException("Impossible de supprimer une séance avec des inscriptions");
         }
 
-        boolean hasInscriptions = activite.getSeances().stream()
-                .anyMatch(seance -> !seance.getInscriptions().isEmpty());
+        activite.getSeances().remove(seance);
+        seanceRepository.delete(seance);
+    }
+    @Transactional
+    public void deleteActivite(Long id) {
+        Activite activite = activiteRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Activité non trouvée avec l'ID: " + id));
 
-        if (hasInscriptions) {
-            throw new IllegalStateException("Impossible de supprimer une activité avec des inscriptions");
+        // Optionnel : vérifier si des contraintes supplémentaires doivent être prises en compte avant suppression
+        if (activite.getSeances() != null && !activite.getSeances().isEmpty()) {
+            throw new IllegalStateException("Impossible de supprimer une activité avec des séances associées");
         }
 
         activiteRepository.delete(activite);

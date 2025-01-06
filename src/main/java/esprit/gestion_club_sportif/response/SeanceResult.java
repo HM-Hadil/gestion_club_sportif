@@ -13,4 +13,6 @@ public class SeanceResult {
     private double prix;
     private StatusSeance status;
     private SalleResult salle;
+    private String nom;
+
 }

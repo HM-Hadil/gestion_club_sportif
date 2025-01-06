@@ -1,6 +1,7 @@
 package esprit.gestion_club_sportif.repo;
 
 import esprit.gestion_club_sportif.entities.Activite;
+import esprit.gestion_club_sportif.request.ActiviteResult;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

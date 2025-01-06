@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 public interface SeanceRepository extends JpaRepository<Seance,Long> {
     public List<Seance> findBySalleId(Long salleId) ;
@@ -16,4 +17,7 @@ public interface SeanceRepository extends JpaRepository<Seance,Long> {
 
 
 
-}
+    }
+
+
+

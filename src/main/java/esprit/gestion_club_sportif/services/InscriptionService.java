@@ -5,6 +5,8 @@ import esprit.gestion_club_sportif.entities.*;
 import esprit.gestion_club_sportif.exceptions.*;
 import esprit.gestion_club_sportif.repo.*;
 import esprit.gestion_club_sportif.response.InscriptionResult;
+import esprit.gestion_club_sportif.response.SeanceDTO;
+import esprit.gestion_club_sportif.response.SeanceResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -116,4 +118,40 @@ public class InscriptionService {
     public List<Inscription> getInscriptionsSeance(Long seanceId) {
         return inscriptionRepository.findBySeanceIdOrderByDateInscription(seanceId);
     }
+
+    @Transactional(readOnly = true)
+    public List<InscriptionResult> getInscriptionsByEntraineur(UUID entraineurId, Long seanceId) {
+        Seance seance = seanceRepository.findById(seanceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Séance non trouvée"));
+
+        if (!seance.getActivite().getEntraineur().getId().equals(entraineurId)) {
+            throw new UnauthorizedException("Vous n'êtes pas autorisé à voir ces inscriptions");
+        }
+
+        List<Inscription> inscriptions = inscriptionRepository.findBySeanceIdOrderByDateInscription(seanceId);
+        return inscriptions.stream()
+                .map(this::convertToInscriptionResult)
+                .collect(Collectors.toList());
+    }
+
+    private InscriptionResult convertToInscriptionResult(Inscription inscription) {
+        InscriptionResult result = new InscriptionResult();
+        result.setId(inscription.getId());
+        result.setSeanceName(inscription.getSeance().getActivite().getNom());
+        result.setDateInscription(inscription.getDateInscription());
+        result.setStatut(inscription.getStatut().name());
+        result.setPresenceConfirmee(inscription.getPresenceConfirmee());
+        result.setCommentaire(inscription.getCommentaire());
+        result.setJoueurId(inscription.getJoueur().getId());
+
+        // Configurer la séance tout en évitant les références circulaires
+        Seance seance = inscription.getSeance();
+        // Détacher les relations qui peuvent causer des références circulaires
+        seance.getActivite().setSeances(null);  // Éviter la liste des séances dans l'activité
+        result.setSeance(seance);
+
+        return result;
+    }
 }
+
+

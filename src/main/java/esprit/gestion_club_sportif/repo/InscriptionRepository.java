@@ -13,4 +13,5 @@ public interface InscriptionRepository extends JpaRepository<Inscription, Long> 
     boolean existsBySeanceAndJoueur(Seance seance, User joueur);
     List<Inscription> findByJoueurIdOrderByDateInscriptionDesc(UUID joueurId);
     List<Inscription> findBySeanceIdOrderByDateInscription(Long seanceId);
+    List<Inscription> findBySeanceIn(List<Seance> seances);
 }

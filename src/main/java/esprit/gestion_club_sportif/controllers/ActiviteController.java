@@ -34,7 +34,7 @@ public class ActiviteController {
     }
 
     @GetMapping("/entraineur/{entraineurId}")
-    public ResponseEntity<List<Activite>> getActivitiesByEntraineur(@PathVariable UUID entraineurId) {
+    public ResponseEntity<List<ActiviteResult>> getActivitiesByEntraineur(@PathVariable UUID entraineurId) {
         return ResponseEntity.ok(activiteService.getActivitiesByEntraineur(entraineurId));
     }
 
@@ -59,22 +59,29 @@ public class ActiviteController {
     }
 
     @PutMapping("/{id}/seances")
-    @PreAuthorize("hasRole('Entreneur')")
     public ResponseEntity<Activite> updateActiviteSeances(
             @PathVariable Long id,
-            @AuthenticationPrincipal UserDetails userDetails,
+
             @RequestBody List<Seance> seances,
             @RequestParam Long salleId) {
-        UUID entraineurId = UUID.fromString(userDetails.getUsername());
-        return ResponseEntity.ok(activiteService.updateActiviteSeances(id, entraineurId, seances, salleId));
+
+        return ResponseEntity.ok(activiteService.updateActiviteSeances(id, seances, salleId));
     }
 
-    @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('Entreneur')")
-    public ResponseEntity<Void> deleteActivite(
-            @PathVariable Long id,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        UUID entraineurId = UUID.fromString(userDetails.getUsername());
-        activiteService.deleteActivite(id, entraineurId);
+    @DeleteMapping("/{activiteId}/seances/{seanceId}")
+    public ResponseEntity<Void> deleteSeance(
+            @PathVariable Long activiteId,
+            @PathVariable Long seanceId
+
+    ) {
+
+        activiteService.deleteSeance(activiteId, seanceId);
         return ResponseEntity.ok().build();
-    }}
+    }
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteActivite(@PathVariable Long id) {
+        activiteService.deleteActivite(id);
+        return ResponseEntity.noContent().build();
+    }
+
+}
