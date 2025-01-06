@@ -13,6 +13,6 @@ import java.util.UUID;
 public interface InscriptionRepository extends JpaRepository<Inscription, Long> {
     boolean existsBySeanceAndJoueur(Seance seance, User joueur);
     List<Inscription> findByJoueurIdOrderByDateInscriptionDesc(UUID joueurId);
+
     List<Inscription> findBySeanceIdOrderByDateInscriptionDesc(Long seanceId); // Changed return type and added Desc
-    List<Inscription> findBySeanceIn(List<Seance> seances);
 }

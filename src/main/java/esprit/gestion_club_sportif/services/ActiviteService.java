@@ -46,14 +46,11 @@ public class ActiviteService {
         this.modelMapper=modelMapper;
         this.userService = userService;
     }
-    /**
-    private boolean isSeanceOverlapping(LocalDateTime startDate1, LocalDateTime endDate1,
-                                        LocalDateTime startDate2, LocalDateTime endDate2) {
-        return !startDate1.isAfter(endDate2) && !endDate1.isBefore(startDate2);
-    }**/
+
     @Transactional
     public Activite createActivite(ActiviteRequest activiteRequest) {
         UUID entraineurId = activiteRequest.getEntraineurId();
+
         User entraineur = userRepository.findById(entraineurId)
                 .orElseThrow(() -> new ResourceNotFoundException("Entraineur non trouvé"));
 
@@ -115,6 +112,10 @@ public class ActiviteService {
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
+
+
+
+
     private ActiviteResult convertToDto(Activite activite) {
         // Utilisation de modelMapper pour le mapping de base
         ActiviteResult dto = modelMapper.map(activite, ActiviteResult.class);
@@ -142,6 +143,7 @@ public class ActiviteService {
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
+
     @Transactional(readOnly = true)
     public Activite getActiviteById(Long id) {
         return activiteRepository.findById(id)

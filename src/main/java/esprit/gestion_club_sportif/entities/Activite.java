@@ -30,8 +30,5 @@ public class Activite {
         seance.setActivite(this);
     }
 
-    public void removeSeance(Seance seance) {
-        seances.remove(seance);
-        seance.setActivite(null);
-    }
+
 }

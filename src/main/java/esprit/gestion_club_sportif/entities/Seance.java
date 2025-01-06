@@ -18,6 +18,7 @@ public class Seance {
     private LocalDateTime dateFin;
     private int nombreLimite;
     private double prix;
+    private int placesDisponibles;
 
     @Enumerated(EnumType.STRING)
     private StatusSeance status;
@@ -33,11 +34,13 @@ public class Seance {
     @OneToMany(mappedBy = "seance", cascade = CascadeType.ALL)
     private Set<Inscription> inscriptions = new HashSet<>();
 
-    public boolean isPlacesDisponibles() {
-        return inscriptions.size() < nombreLimite;
+    @PrePersist
+    public void prePersist() {
+        this.placesDisponibles = this.nombreLimite;
     }
 
-    public int getPlacesRestantes() {
-        return nombreLimite - inscriptions.size();
+    public boolean isPlacesDisponibles() {
+        return placesDisponibles > 0;
     }
-}
+
+   }

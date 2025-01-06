@@ -20,4 +20,6 @@ public class Salle {
 
     @Enumerated(EnumType.STRING)
     private SalleStatus status = SalleStatus.DISPONIBLE; // Par défaut disponible
+
+
 }

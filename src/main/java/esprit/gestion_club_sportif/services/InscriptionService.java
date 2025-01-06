@@ -62,12 +62,25 @@ public class InscriptionService {
         return inscriptionRepository.save(inscription);
     }
 
+
+    @Transactional
     public void confirmerPresence(Long inscriptionId) {
         Inscription inscription = inscriptionRepository.findById(inscriptionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Inscription non trouvée"));
 
-        // Mettre à jour le statut de présence
+        if (inscription.getPresenceConfirmee()) {
+            throw new IllegalStateException("Présence déjà confirmée");
+        }
+
+        Seance seance = inscription.getSeance();
+        if (seance.getPlacesDisponibles() <= 0) {
+            throw new IllegalStateException("Plus de places disponibles");
+        }
+
         inscription.setPresenceConfirmee(true);
+        seance.setPlacesDisponibles(seance.getPlacesDisponibles() - 1);
+
+        seanceRepository.save(seance);
         inscriptionRepository.save(inscription);
     }
     @Transactional

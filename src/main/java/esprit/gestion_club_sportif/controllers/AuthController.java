@@ -48,14 +48,7 @@ public class AuthController {
     }
 
 
-    @GetMapping("/confirm-account")
-    public ResponseEntity<String> confirmUserAccount(@RequestParam String token) {
-        String result = iAuthService.confirmUserAccount(token);
-        if (result.contains("Error") || result.contains("expired")) {
-            return ResponseEntity.badRequest().body(result);
-        }
-        return ResponseEntity.ok("<html><body><b>" + result + "</b></body></html>");
-    }
+
 
 
 }

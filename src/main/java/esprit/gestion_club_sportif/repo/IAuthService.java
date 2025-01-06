@@ -14,18 +14,10 @@ public interface IAuthService {
     AuthenticationResponse register(UserRequest req) throws MalformedURLException, MessagingException;
     AuthenticationResponse authenticate(AuthenticationRequest req);
 
-
-
-
-
-
     void activateEntreneurAccount(UUID id) throws MessagingException;
 
-    String confirmUserAccount(String token);
 
 
-    ConfirmationToken createConfirmationToken(String email);
-    void sendConfirmationToken(String email) throws MessagingException, MalformedURLException;
 
 
 }

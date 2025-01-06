@@ -29,10 +29,6 @@ public class UserService implements IUserService {
     }
 
 
-    @Override
-    public User getUserById(UUID id) {
-        return userRepo.findById(id).orElse(null);
-    }
 
     @Override
     public Optional<UserResult> findUserByEmail(String email) {
@@ -51,12 +47,7 @@ public class UserService implements IUserService {
        userRepo.save(user);
         return userMapper.entityToUser(user);
     }
-    public void save(User user) {
-        userRepo.save(user);
-    }
-    public Optional<User> findByEmail(String email) {
-        return userRepo.findByEmail(email);
-    }
+
     @Override
     public List<User> getInactivePartners() {
         return userRepo.findByIsEnabledFalseAndRole(Role.Entreneur);

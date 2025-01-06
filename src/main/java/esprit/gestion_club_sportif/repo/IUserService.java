@@ -12,7 +12,6 @@ public interface IUserService {
     UserResult findUserById(UUID id);
     UserResult updateUser(UUID id, UserRequest user);
 
-    User getUserById(UUID id);
 
     Optional<UserResult> findUserByEmail(String email);
     void deletePartnerAccount(UUID id);

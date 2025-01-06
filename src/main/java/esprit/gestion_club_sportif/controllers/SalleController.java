@@ -14,7 +14,7 @@ import java.util.List;
 @RequestMapping("salles")
 @CrossOrigin(origins = "http://localhost:4200")
 
-//@PreAuthorize("hasAnyRole('ADMIN', 'ENTRENEUR')")  // Ajouter cette ligne
+
 
 public class SalleController {
     private final SalleService salleService;

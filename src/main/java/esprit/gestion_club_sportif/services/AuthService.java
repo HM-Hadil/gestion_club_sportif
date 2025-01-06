@@ -92,25 +92,6 @@ public class AuthService implements IAuthService {
 
 
 
-    @Override
-    public String confirmUserAccount(String token) {
-        var confirmationToken = confirmationTokenRepository.findByToken(token)
-                .orElse(null);
-        if (confirmationToken != null) {
-            if (confirmationToken.isExpired()) {
-                logger.warn("Expired confirmation token used: {}", token);
-                return "Confirmation token expired!";
-            }
-            var user = confirmationToken.getUser();
-            user.setEnabled(true);
-            userRepo.save(user);
-            confirmationTokenRepository.delete(confirmationToken); // Delete the token after use
-            logger.info("User account confirmed: {}", user.getEmail());
-            return "Compte vérifié avec succès !<br>Vous pouvez maintenant vous connecter en cliquant sur ce lien : <a href=\"" + appUrl + "/connexion\"><b>Se connecter</b></a>";
-        }
-        logger.error("Invalid confirmation token: {}", token);
-        return "Error: Couldn't verify email!";
-    }
 
 
     public AuthenticationResponse authenticate(AuthenticationRequest req) {
@@ -162,23 +143,9 @@ public class AuthService implements IAuthService {
         }
     }
 
-    public ConfirmationToken createConfirmationToken(String email) {
-        var user = userRepo.findByEmail(email).orElseThrow();
-        var token = jwtService.generateToken(user);
 
-        var confirmationToken = ConfirmationToken.builder()
-                .id(UUID.randomUUID())
-                .token(token)
-                .user(user)
-                .expirationDate(LocalDateTime.now().plusMinutes(expirationMinutes))
-                .build();
-        return confirmationTokenRepository.save(confirmationToken);
-    }
 
-    @Override
-    public void sendConfirmationToken(String email) throws MessagingException, MalformedURLException {
 
-    }
 
 
 }

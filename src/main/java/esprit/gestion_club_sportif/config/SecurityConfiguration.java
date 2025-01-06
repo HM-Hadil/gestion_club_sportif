@@ -31,12 +31,12 @@ public class SecurityConfiguration {
             {
                     "/api/auth/**",
                     "/api/categories/**",
-                    "/api/stripe/**",
-                    "/api/paypal/**",
+
+
                     "/activites/**",
                     "api/reservations/**",
-                    "/api/rabbitMQ/",
-                    "/api/rabbitMQ/reservation/**",
+
+
 
                     "/api/users/**",
                     "/salles/**",
